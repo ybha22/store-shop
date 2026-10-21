@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import useAuthStore from '../stores/authStore'
-import { Button, Card, Field, inputClass } from '../comp/ui'
+import { Button, Card, Field, Logo, inputClass } from '../comp/ui'
 
 export default function LoginPage() {
   const user = useAuthStore((s) => s.user)
   const login = useAuthStore((s) => s.login)
   const navigate = useNavigate()
   const location = useLocation()
-  const from = location.state?.from || '/transfer'
+  const from = location.state?.from || '/'
   const [userId, setUserId] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -33,10 +33,10 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            Store<span className="text-indigo-600">Shop</span>
+          <h1>
+            <Logo className="text-3xl" />
           </h1>
-          <p className="mt-2 text-sm text-slate-500">가게 양도·양수 정보 공유 서비스</p>
+          <p className="mt-2 text-sm text-slate-500">가게 양도·양수 · 빈 공실 · 집기 중고거래 정보 플랫폼</p>
         </div>
         <Card className="p-6 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -61,7 +61,7 @@ export default function LoginPage() {
           </form>
         </Card>
         <p className="mt-6 text-center text-sm">
-          <Link to="/transfer" className="text-slate-500 hover:text-indigo-600">← 게시글 둘러보기</Link>
+          <Link to="/" className="text-slate-500 hover:text-indigo-600">← 게시글 둘러보기</Link>
         </p>
       </div>
     </div>

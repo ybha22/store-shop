@@ -2,6 +2,8 @@ export const KEYS = {
   MEMBERS: 'storeshop_members',
   POSTS: 'storeshop_posts',
   SESSION: 'storeshop_session',
+  COMMENTS: 'storeshop_comments',
+  SEEDED: 'storeshop_seeded',
 }
 
 export function load(key, fallback) {

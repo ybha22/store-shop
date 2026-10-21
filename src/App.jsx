@@ -7,6 +7,8 @@ import BoardDetailPage from './pages/BoardDetailPage'
 import BoardFormPage from './pages/BoardFormPage'
 import MemberListPage from './pages/MemberListPage'
 import MemberFormPage from './pages/MemberFormPage'
+import HomePage from './pages/HomePage'
+import SearchPage from './pages/SearchPage'
 
 export default function App() {
   return (
@@ -14,7 +16,9 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route element={<Layout />}>
-          {/* 비로그인 접근 가능: 게시글 목록 */}
+          {/* 비로그인 접근 가능: 홈, 매물 검색, 게시글 목록 */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/:board" element={<BoardListPage />} />
           {/* 로그인 필요 */}
           <Route path="/members" element={<RequireAuth><MemberListPage /></RequireAuth>} />
@@ -24,7 +28,7 @@ export default function App() {
           <Route path="/:board/:id" element={<RequireAuth><BoardDetailPage /></RequireAuth>} />
           <Route path="/:board/:id/edit" element={<RequireAuth><BoardFormPage /></RequireAuth>} />
         </Route>
-        <Route path="*" element={<Navigate to="/transfer" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   )

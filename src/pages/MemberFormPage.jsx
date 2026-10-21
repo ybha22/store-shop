@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import useAuthStore from '../stores/authStore'
+import { ROLES } from '../utils/board'
 import { createMember, getMember, updateMember } from '../service/memberService'
 import { Button, Card, Field, LinkButton, PageHeader, inputClass } from '../comp/ui'
 
@@ -64,8 +65,9 @@ export default function MemberFormPage() {
           <Field label="구분">
             <div className="flex gap-2">
               {[
-                ['USER', '사용자'],
-                ['ADMIN', '운영자'],
+                ['USER', ROLES.USER],
+                ['REALTOR', ROLES.REALTOR],
+                ['ADMIN', ROLES.ADMIN],
               ].map(([value, label]) => (
                 <button
                   key={value}

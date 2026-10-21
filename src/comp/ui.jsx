@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { ROLES } from '../utils/board'
 
 const VARIANTS = {
   primary: 'bg-indigo-600 text-white hover:bg-indigo-700',
@@ -31,7 +32,7 @@ export function Field({ label, children }) {
 }
 
 export const inputClass =
-  'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-100 disabled:text-slate-500'
+  'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none placeholder:text-slate-400 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-100 disabled:text-slate-500'
 
 export function PageHeader({ title, desc, action }) {
   return (
@@ -45,15 +46,38 @@ export function PageHeader({ title, desc, action }) {
   )
 }
 
+const ROLE_STYLES = {
+  ADMIN: 'bg-indigo-50 text-indigo-700',
+  REALTOR: 'bg-emerald-50 text-emerald-700',
+  USER: 'bg-slate-100 text-slate-600',
+}
+
 export function RoleBadge({ role }) {
-  const isAdmin = role === 'ADMIN'
   return (
-    <span
-      className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
-        isAdmin ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-100 text-slate-600'
-      }`}
-    >
-      {isAdmin ? '운영자' : '사용자'}
+    <span className={`inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${ROLE_STYLES[role] ?? ROLE_STYLES.USER}`}>
+      {ROLES[role] ?? ROLES.USER}
+    </span>
+  )
+}
+
+const STATUS_STYLES = {
+  판매중: 'bg-emerald-50 text-emerald-700',
+  예약중: 'bg-amber-50 text-amber-700',
+  판매완료: 'bg-slate-100 text-slate-500',
+}
+
+export function StatusBadge({ status }) {
+  return (
+    <span className={`inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[status] ?? STATUS_STYLES.판매완료}`}>
+      {status}
+    </span>
+  )
+}
+
+export function Logo({ className = '' }) {
+  return (
+    <span className={`font-bold tracking-tight text-slate-900 ${className}`}>
+      상가<span className="text-indigo-600">ON</span>
     </span>
   )
 }
