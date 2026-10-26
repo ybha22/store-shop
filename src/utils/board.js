@@ -8,6 +8,36 @@ export const ROLES = {
 
 export const CATEGORIES = ['카페', '음식점', '주점', '판매업', '서비스업', '기타']
 
+// 대표 지역(시/도). aliases: 지역 텍스트가 이 값으로 시작하면 해당 지역으로 판단
+export const REGIONS = [
+  { value: '서울', aliases: ['서울'] },
+  { value: '부산', aliases: ['부산'] },
+  { value: '대구', aliases: ['대구'] },
+  { value: '인천', aliases: ['인천'] },
+  { value: '광주', aliases: ['광주광역시', '광주 '] },
+  { value: '대전', aliases: ['대전'] },
+  { value: '울산', aliases: ['울산'] },
+  { value: '세종', aliases: ['세종'] },
+  { value: '경기', aliases: ['경기'] },
+  { value: '강원', aliases: ['강원'] },
+  { value: '충북', aliases: ['충북', '충청북도'] },
+  { value: '충남', aliases: ['충남', '충청남도'] },
+  { value: '전북', aliases: ['전북', '전라북도'] },
+  { value: '전남', aliases: ['전남', '전라남도'] },
+  { value: '경북', aliases: ['경북', '경상북도'] },
+  { value: '경남', aliases: ['경남', '경상남도'] },
+  { value: '제주', aliases: ['제주'] },
+]
+
+// 대표 지역 값이면 시/도 일치, 그 외(직접 입력 등)는 부분 일치
+export function matchRegion(text, value) {
+  if (!value) return true
+  const region = String(text ?? '').trim()
+  const def = REGIONS.find((r) => r.value === value)
+  if (!def) return region.toLowerCase().includes(value.trim().toLowerCase())
+  return def.aliases.some((a) => `${region} `.startsWith(a))
+}
+
 // 유료 상단노출 상품 (모의 결제)
 export const AD_PLANS = [
   { days: 7, price: 30000 },
@@ -59,7 +89,34 @@ export const BOARDS = {
       { key: 'moveInDate', label: '입주가능일', type: 'text', placeholder: '즉시 / 2026-12-01' },
     ],
     images: { count: 3, required: true },
-    listColumns: ['region', 'area', 'monthlyRent'],
+    listColumns: ['region', 'area', 'deposit', 'monthlyRent'],
+    // 목록 맞춤 검색 조건 (region: 대표 지역 선택 / text: 부분 일치 / range: 금액 구간, 만원 단위, max 미포함)
+    filters: [
+      { key: 'region', label: '지역', type: 'region' },
+      { key: 'title', label: '제목', type: 'text', placeholder: '제목 검색' },
+      {
+        key: 'deposit',
+        label: '보증금',
+        type: 'range',
+        ranges: [
+          { label: '1,000만원 미만', min: 0, max: 1000 },
+          { label: '1,000~3,000만원', min: 1000, max: 3000 },
+          { label: '3,000~5,000만원', min: 3000, max: 5000 },
+          { label: '5,000만원 이상', min: 5000, max: null },
+        ],
+      },
+      {
+        key: 'monthlyRent',
+        label: '월세',
+        type: 'range',
+        ranges: [
+          { label: '100만원 미만', min: 0, max: 100 },
+          { label: '100~300만원', min: 100, max: 300 },
+          { label: '300~500만원', min: 300, max: 500 },
+          { label: '500만원 이상', min: 500, max: null },
+        ],
+      },
+    ],
   },
   market: {
     type: 'MARKET',
@@ -84,6 +141,22 @@ export const BOARDS = {
     listColumns: [],
     comments: true,
   },
+  faq: {
+    type: 'FAQ',
+    label: '자주묻는 질문',
+    desc: '상가ON 이용 중 자주 묻는 질문을 모았습니다. 질문을 누르면 답변이 열립니다.',
+    writeRoles: ['ADMIN'],
+    writeDeniedMessage: '자주묻는 질문은 운영자만 등록할 수 있습니다.',
+    writeLabel: '질문 등록',
+    titleLabel: '질문',
+    contentLabel: '답변',
+    fields: [
+      { key: 'category', label: '분류', type: 'select', options: ['회원', '매물', '상단노출', '빈 공실', '기타'], default: '회원', required: true },
+    ],
+    images: { count: 0, required: false },
+    listColumns: [],
+    display: 'faq',
+  },
 }
 
 // 헤더 메뉴 (매물 검색은 게시판이 아닌 검색 화면)
@@ -93,7 +166,28 @@ export const NAV_MENUS = [
   { to: '/vacancy', label: BOARDS.vacancy.label },
   { to: '/market', label: BOARDS.market.label },
   { to: '/community', label: BOARDS.community.label },
+  { to: '/faq', label: BOARDS.faq.label },
 ]
+
+// 게시판 목록 맞춤 검색 (URL 쿼리 값 기준)
+export function applyFilters(posts, filters = [], values = {}) {
+  return filters.reduce((list, f) => {
+    const value = values[f.key]
+    if (!value) return list
+    if (f.type === 'region') return list.filter((p) => matchRegion(p[f.key], value))
+    if (f.type === 'text') {
+      const q = value.trim().toLowerCase()
+      return list.filter((p) => String(p[f.key] ?? '').toLowerCase().includes(q))
+    }
+    const range = f.ranges[Number(value)]
+    if (!range) return list
+    return list.filter((p) => {
+      const n = p[f.key]
+      if (n === null || n === undefined) return false
+      return n >= range.min && (range.max === null || n < range.max)
+    })
+  }, posts)
+}
 
 export function canWriteBoard(info, user) {
   if (!user) return false

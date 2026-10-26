@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CATEGORIES } from '../utils/board'
+import { CATEGORIES, REGIONS } from '../utils/board'
 import { Button, inputClass } from './ui'
 
-// 지역 / 점포명 / 업종으로 매물 검색 → /search?region=&name=&category=
+// 대표 지역(시/도) 선택 / 점포명 / 업종으로 매물 검색 → /search?region=&name=&category=
 export default function SearchBar({ initial = {}, large = false }) {
   const navigate = useNavigate()
   const [region, setRegion] = useState(initial.region ?? '')
@@ -23,13 +23,13 @@ export default function SearchBar({ initial = {}, large = false }) {
   const size = large ? 'py-3 text-base' : ''
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-2 sm:grid-cols-[1fr_1fr_160px_auto]">
-      <input
-        className={`${inputClass} ${size}`}
-        value={region}
-        onChange={(e) => setRegion(e.target.value)}
-        placeholder="지역 (예: 강남구, 수원)"
-      />
+    <form onSubmit={handleSubmit} className="grid gap-2 sm:grid-cols-[160px_1fr_160px_auto]">
+      <select className={`${inputClass} ${size}`} value={region} onChange={(e) => setRegion(e.target.value)}>
+        <option value="">지역 전체</option>
+        {REGIONS.map((r) => (
+          <option key={r.value} value={r.value}>{r.value}</option>
+        ))}
+      </select>
       <input
         className={`${inputClass} ${size}`}
         value={name}

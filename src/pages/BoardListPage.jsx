@@ -1,22 +1,26 @@
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import useAuthStore from '../stores/authStore'
-import { BOARDS, canWriteBoard, formatFieldValue } from '../utils/board'
+import { BOARDS, applyFilters, canWriteBoard, formatFieldValue } from '../utils/board'
 import { formatDate } from '../utils/dateUtil'
 import { getPosts, isAdActive } from '../service/postService'
 import { AdBadge } from '../comp/ListingCard'
 import { countComments } from '../service/commentService'
 import { Card, LinkButton, PageHeader, StatusBadge } from '../comp/ui'
+import BoardFilter from '../comp/BoardFilter'
+import FaqList from '../comp/FaqList'
 
 export default function BoardListPage() {
   const { board } = useParams()
   const info = BOARDS[board]
   const user = useAuthStore((s) => s.user)
+  const [params] = useSearchParams()
   if (!info) return <Navigate to="/" replace />
 
-  const posts = getPosts(info.type)
+  const posts = applyFilters(getPosts(info.type), info.filters, Object.fromEntries(params))
   const columns = info.listColumns.map((key) => info.fields.find((f) => f.key === key))
   // 비로그인은 글쓰기 클릭 시 로그인으로 이동, 로그인 회원은 작성 권한이 있을 때만 노출
-  const showWrite = !user || canWriteBoard(info, user)
+  // (자주묻는 질문은 운영자 전용이라 비로그인에게 노출하지 않음)
+  const showWrite = user ? canWriteBoard(info, user) : info.display !== 'faq'
 
   return (
     <div>
@@ -25,6 +29,16 @@ export default function BoardListPage() {
         desc={info.desc}
         action={showWrite && <LinkButton to={`/${board}/new`}>{info.writeLabel ?? '글쓰기'}</LinkButton>}
       />
+      {info.display === 'faq' ? (
+        <FaqList key={board} board={board} posts={posts} categories={info.fields[0].options} />
+      ) : (
+      <>
+      {info.filters && <BoardFilter key={board} filters={info.filters} />}
+      {info.filters && (
+        <p className="mb-3 text-sm text-slate-500">
+          검색 결과 <span className="font-semibold text-indigo-600">{posts.length}</span>건
+        </p>
+      )}
       <Card className="overflow-x-auto">
         <table className="w-full min-w-[640px] text-sm">
           <thead>
@@ -43,7 +57,7 @@ export default function BoardListPage() {
             {posts.length === 0 && (
               <tr>
                 <td colSpan={5 + columns.length} className="px-4 py-16 text-center text-slate-400">
-                  등록된 게시글이 없습니다.
+                  {params.size > 0 ? '조건에 맞는 게시글이 없습니다.' : '등록된 게시글이 없습니다.'}
                 </td>
               </tr>
             )}
@@ -76,6 +90,8 @@ export default function BoardListPage() {
           </tbody>
         </table>
       </Card>
+      </>
+      )}
     </div>
   )
 }

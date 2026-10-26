@@ -35,3 +35,8 @@ export function placeholderImage(label, color) {
 </svg>`
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
 }
+
+// 테스트 매물용 Unsplash 무료 이미지
+export function unsplashImage(photoId) {
+  return `https://images.unsplash.com/photo-${photoId}?w=800&q=70&fit=crop`
+}

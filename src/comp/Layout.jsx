@@ -39,9 +39,14 @@ export default function Layout() {
                 </button>
               </>
             ) : (
-              <LinkButton to="/login" state={{ from: location.pathname }} className="px-3 py-1.5">
-                로그인
-              </LinkButton>
+              <>
+                <LinkButton to="/signup" variant="secondary" className="px-3 py-1.5">
+                  회원가입
+                </LinkButton>
+                <LinkButton to="/login" state={{ from: location.pathname }} className="px-3 py-1.5">
+                  로그인
+                </LinkButton>
+              </>
             )}
           </div>
         </div>

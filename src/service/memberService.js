@@ -36,15 +36,20 @@ export function getMember(id) {
   return member ? stripPassword(member) : null
 }
 
-export function createMember({ userId, password, name, role }) {
+export function createMember({ userId, password, name, role, phone = null, email = null }) {
   const members = getAll()
   if (members.some((m) => m.userId === userId)) {
     throw new Error('이미 사용 중인 아이디입니다.')
   }
   const now = new Date().toISOString()
-  const member = { id: nextId(members), userId, password, name, role, createdAt: now, updatedAt: now }
+  const member = { id: nextId(members), userId, password, name, role, phone, email, createdAt: now, updatedAt: now }
   save(KEYS.MEMBERS, [...members, member])
   return stripPassword(member)
+}
+
+// 회원가입 (모의 버전: 사용자 구분으로만 가입)
+export function signup({ userId, password, name, phone, email }) {
+  return createMember({ userId, password, name, role: 'USER', phone, email })
 }
 
 export function updateMember(id, { password, name, role }) {

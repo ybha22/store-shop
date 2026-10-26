@@ -9,12 +9,14 @@ import MemberListPage from './pages/MemberListPage'
 import MemberFormPage from './pages/MemberFormPage'
 import HomePage from './pages/HomePage'
 import SearchPage from './pages/SearchPage'
+import SignupPage from './pages/SignupPage'
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
         <Route element={<Layout />}>
           {/* 비로그인 접근 가능: 홈, 매물 검색, 게시글 목록 */}
           <Route path="/" element={<HomePage />} />

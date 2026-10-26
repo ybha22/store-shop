@@ -179,7 +179,7 @@ export default function BoardFormPage() {
     }
     try {
       const saved = isEdit ? updatePost(id, data) : createPost(info.type, data, user)
-      navigate(`/${board}/${saved.id}`, { replace: true })
+      navigate(info.display === 'faq' ? `/${board}` : `/${board}/${saved.id}`, { replace: true })
     } catch (err) {
       setError(err.message)
     }
@@ -190,7 +190,7 @@ export default function BoardFormPage() {
       <PageHeader title={`${info.label} ${isEdit ? '글 수정' : '글쓰기'}`} />
       <Card className="p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
-          <Field label="제목">
+          <Field label={info.titleLabel ?? '제목'}>
             <input className={inputClass} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} />
           </Field>
           {info.fields.length > 0 && (
@@ -227,7 +227,7 @@ export default function BoardFormPage() {
               </div>
             </div>
           )}
-          <Field label="내용">
+          <Field label={info.contentLabel ?? '내용'}>
             <textarea
               className={`${inputClass} min-h-64 resize-y leading-relaxed`}
               value={content}
@@ -236,7 +236,7 @@ export default function BoardFormPage() {
           </Field>
           {error && <p className="text-sm text-rose-600">{error}</p>}
           <div className="flex justify-end gap-2">
-            <LinkButton to={isEdit ? `/${board}/${id}` : `/${board}`} variant="secondary">취소</LinkButton>
+            <LinkButton to={isEdit && info.display !== 'faq' ? `/${board}/${id}` : `/${board}`} variant="secondary">취소</LinkButton>
             <Button type="submit">{isEdit ? '수정' : '등록'}</Button>
           </div>
         </form>

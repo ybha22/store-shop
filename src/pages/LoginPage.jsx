@@ -60,7 +60,10 @@ export default function LoginPage() {
             <Button type="submit" className="w-full py-2.5">로그인</Button>
           </form>
         </Card>
-        <p className="mt-6 text-center text-sm">
+        <p className="mt-6 text-center text-sm text-slate-500">
+          아직 회원이 아니신가요? <Link to="/signup" className="font-medium text-indigo-600 hover:underline">회원가입</Link>
+        </p>
+        <p className="mt-2 text-center text-sm">
           <Link to="/" className="text-slate-500 hover:text-indigo-600">← 게시글 둘러보기</Link>
         </p>
       </div>
