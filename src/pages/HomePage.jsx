@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
-import { BOARDS, formatFieldValue } from '../utils/board'
+import { BOARDS, CATEGORIES, CATEGORY_ICONS, formatFieldValue } from '../utils/board'
 import { formatDate } from '../utils/dateUtil'
-import { getAdListings, getLatestPosts } from '../service/postService'
+import { getAdListings, getLatestPosts, getUrgentListings } from '../service/postService'
 import { Card, LinkButton } from '../comp/ui'
 import SearchBar from '../comp/SearchBar'
-import ListingCard, { AdBadge } from '../comp/ListingCard'
+import ListingCard, { AdBadge, UrgentBadge } from '../comp/ListingCard'
 import ListingCarousel from '../comp/ListingCarousel'
 
 function SectionTitle({ title, desc, to, controls }) {
@@ -83,8 +83,29 @@ function AppBanner() {
   )
 }
 
+// 업종 바로가기 (클릭 시 해당 업종 매물 검색)
+function CategoryShortcuts() {
+  return (
+    <section className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+      {CATEGORIES.map((c) => (
+        <Link
+          key={c}
+          to={`/search?category=${encodeURIComponent(c)}`}
+          className="group flex flex-col items-center gap-2 rounded-2xl border border-slate-200 bg-white py-4 transition hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md"
+        >
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 text-2xl transition-colors group-hover:bg-indigo-100">
+            {CATEGORY_ICONS[c]}
+          </span>
+          <span className="text-sm font-medium text-slate-700 group-hover:text-indigo-600">{c}</span>
+        </Link>
+      ))}
+    </section>
+  )
+}
+
 export default function HomePage() {
   const adListings = getAdListings()
+  const urgentListings = getUrgentListings()
   const latest = getLatestPosts('TRANSFER', 6)
   const vacancyFields = BOARDS.vacancy.fields
   const field = (fields, key) => fields.find((f) => f.key === key)
@@ -107,6 +128,8 @@ export default function HomePage() {
           <SearchBar large />
         </div>
       </section>
+
+      <CategoryShortcuts />
 
       <section>
         {adListings.length === 0 ? (
@@ -131,6 +154,22 @@ export default function HomePage() {
           />
         )}
       </section>
+
+      {urgentListings.length > 0 && (
+        <section>
+          <ListingCarousel
+            posts={urgentListings}
+            renderControls={(controls) => (
+              <SectionTitle
+                title={<>급매 매물 <UrgentBadge /></>}
+                desc="빠르게 양도를 원하는 매물입니다. 조건이 좋은 매물을 놓치지 마세요."
+                to="/search"
+                controls={controls}
+              />
+            )}
+          />
+        </section>
+      )}
 
       <section>
         <SectionTitle title="최신 매물" desc="방금 등록된 양도 매물입니다." to="/search" />

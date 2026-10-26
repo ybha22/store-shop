@@ -1,6 +1,6 @@
 import { KEYS, load, save, nextId } from '../utils/storage'
 import { placeholderImage, unsplashImage } from '../utils/imageUtil'
-import { matchRegion } from '../utils/board'
+import { LISTING_FILTERS, applyFilters, matchRegion } from '../utils/board'
 import { deleteCommentsByPost } from './commentService'
 
 // 매물(TRANSFER) 테스트 데이터 - 모두 프리미엄(상단노출) 상태로 생성, 사진은 Unsplash 무료 이미지
@@ -36,7 +36,21 @@ const LISTING_SEEDS = [
 자세한 사항은 문의 주세요.`,
   storeName, region, category, deposit, monthlyRent, premium, area, floor, monthlySales, monthlyProfit, parking, adDays,
   photos: photoIds.map(unsplashImage),
+  ...listingExtra(storeName),
 }))
+
+// 테스트 매물의 거래상태/급매 예시 (점포명 기준)
+function listingExtra(storeName) {
+  const extras = {
+    '홍대 바삭치킨': { urgent: true },
+    '수원 아이스월드': { urgent: true },
+    '서면 핑크네일': { urgent: true },
+    '연남 그릴하우스': { urgent: true },
+    '성수 루프탑 와인바': { dealStatus: '계약중' },
+    '판교 그린보울': { dealStatus: '거래완료' },
+  }
+  return { dealStatus: '거래가능', urgent: false, ...extras[storeName] }
+}
 
 // LISTING_V3 생성 시 교체되는 이전 버전의 매물 테스트 글 제목
 const OLD_LISTING_SEED_TITLES = [
@@ -145,6 +159,17 @@ function seedPostsFor(key, startId) {
   }))
 }
 
+// 이미 생성된 테스트 데이터를 고치는 패치 (seedKey처럼 한 번만 실행)
+const SEED_PATCHES = {
+  // 기존 테스트 매물에 거래상태/급매 예시 적용
+  LISTING_V3_STATUS: (posts) =>
+    posts.map((p) =>
+      p.boardType === 'TRANSFER' && p.writerId === 'admin' && p.title?.startsWith('[테스트]') && p.dealStatus === undefined
+        ? { ...p, ...listingExtra(p.storeName) }
+        : p,
+    ),
+}
+
 // 테스트 글은 seedKey(기본: 게시판 타입) 단위로 한 번만 생성 (새로 추가된 묶음만 추가)
 function getAll() {
   let posts = load(KEYS.POSTS, null)
@@ -153,7 +178,7 @@ function getAll() {
     seeded = posts === null ? [] : ['TRANSFER', 'TAKEOVER']
   }
   posts = posts ?? []
-  const keys = [...new Set(SEED_POSTS.map(seedKeyOf))]
+  const keys = [...new Set(SEED_POSTS.map(seedKeyOf)), ...Object.keys(SEED_PATCHES)]
   const pending = keys.filter((k) => !seeded.includes(k))
   if (pending.length > 0) {
     if (pending.includes('LISTING_V3')) {
@@ -162,7 +187,7 @@ function getAll() {
       )
     }
     for (const key of pending) {
-      posts = [...posts, ...seedPostsFor(key, nextId(posts))]
+      posts = SEED_PATCHES[key] ? SEED_PATCHES[key](posts) : [...posts, ...seedPostsFor(key, nextId(posts))]
     }
     save(KEYS.POSTS, posts)
     save(KEYS.SEEDED, [...seeded, ...pending])
@@ -176,19 +201,41 @@ export function isAdActive(post) {
 
 const byLatest = (a, b) => b.id - a.id
 
-// 매물 검색: 지역은 대표 지역(시/도) 일치, 점포명은 부분 일치, 업종은 일치. 상단노출 매물 우선 정렬
-export function searchListings({ region = '', name = '', category = '' } = {}) {
+export const isDealDone = (p) => p.dealStatus === '거래완료'
+
+// 정렬 키별 비교 함수 (값이 없는 매물은 뒤로)
+const ascBy = (key) => (a, b) => (a[key] ?? Infinity) - (b[key] ?? Infinity) || byLatest(a, b)
+const SORTERS = {
+  latest: byLatest,
+  premiumAsc: ascBy('premium'),
+  rentAsc: ascBy('monthlyRent'),
+  views: (a, b) => b.views - a.views || byLatest(a, b),
+}
+// 추천순: 거래완료는 맨 뒤, 상단노출 → 급매 → 최신순
+const recommended = (a, b) =>
+  Number(isDealDone(a)) - Number(isDealDone(b)) ||
+  Number(isAdActive(b)) - Number(isAdActive(a)) ||
+  Number(!!b.urgent) - Number(!!a.urgent) ||
+  byLatest(a, b)
+
+// 매물 검색: 지역은 대표 지역(시/도) 일치, 점포명은 부분 일치, 업종은 일치, 상세 조건(금액/면적/층수) + 정렬
+export function searchListings({ region = '', name = '', category = '', sort = '', ...conditions } = {}) {
   const n = name.trim().toLowerCase()
-  return getAll()
+  const list = getAll()
     .filter((p) => p.boardType === 'TRANSFER')
     .filter((p) => matchRegion(p.region, region))
     .filter((p) => !n || (p.storeName ?? '').toLowerCase().includes(n))
     .filter((p) => !category || p.category === category)
-    .sort((a, b) => Number(isAdActive(b)) - Number(isAdActive(a)) || byLatest(a, b))
+  return applyFilters(list, LISTING_FILTERS, conditions).sort(SORTERS[sort] ?? recommended)
 }
 
 export function getAdListings() {
   return getAll().filter((p) => p.boardType === 'TRANSFER' && isAdActive(p)).sort(byLatest)
+}
+
+// 급매 매물 (거래완료 제외)
+export function getUrgentListings() {
+  return getAll().filter((p) => p.boardType === 'TRANSFER' && p.urgent && !isDealDone(p)).sort(byLatest)
 }
 
 export function getLatestPosts(boardType, limit) {

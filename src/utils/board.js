@@ -8,6 +8,99 @@ export const ROLES = {
 
 export const CATEGORIES = ['카페', '음식점', '주점', '판매업', '서비스업', '기타']
 
+// 메인 업종 바로가기 아이콘
+export const CATEGORY_ICONS = {
+  카페: '☕',
+  음식점: '🍽️',
+  주점: '🍺',
+  판매업: '🛍️',
+  서비스업: '✂️',
+  기타: '📦',
+}
+
+export const DEAL_STATUSES = ['거래가능', '계약중', '거래완료']
+
+// 매물번호 (게시글 id 기반)
+export function listingNo(post) {
+  return `No.${10000 + post.id}`
+}
+
+// 층수 텍스트 → 숫자 (지하는 음수, 판단 불가 시 null)
+function floorLevel(text) {
+  const s = String(text ?? '')
+  const n = Number((s.match(/\d+/) ?? [])[0])
+  if (s.includes('지하')) return -(n || 1)
+  return Number.isFinite(n) && n > 0 ? n : null
+}
+
+// 매물 검색 상세 조건 (금액은 만원 단위, max 미포함)
+export const LISTING_FILTERS = [
+  {
+    key: 'deposit',
+    label: '보증금',
+    type: 'range',
+    ranges: [
+      { label: '1,000만원 미만', min: 0, max: 1000 },
+      { label: '1,000~3,000만원', min: 1000, max: 3000 },
+      { label: '3,000~5,000만원', min: 3000, max: 5000 },
+      { label: '5,000만원 이상', min: 5000, max: null },
+    ],
+  },
+  {
+    key: 'monthlyRent',
+    label: '월세',
+    type: 'range',
+    ranges: [
+      { label: '100만원 미만', min: 0, max: 100 },
+      { label: '100~300만원', min: 100, max: 300 },
+      { label: '300~500만원', min: 300, max: 500 },
+      { label: '500만원 이상', min: 500, max: null },
+    ],
+  },
+  {
+    key: 'premium',
+    label: '권리금',
+    type: 'range',
+    ranges: [
+      { label: '무권리', min: 0, max: 1 },
+      { label: '3,000만원 미만', min: 0, max: 3000 },
+      { label: '3,000~5,000만원', min: 3000, max: 5000 },
+      { label: '5,000만원~1억', min: 5000, max: 10000 },
+      { label: '1억 이상', min: 10000, max: null },
+    ],
+  },
+  {
+    key: 'area',
+    label: '면적',
+    type: 'range',
+    ranges: [
+      { label: '10평 미만', min: 0, max: 10 },
+      { label: '10~20평', min: 10, max: 20 },
+      { label: '20~30평', min: 20, max: 30 },
+      { label: '30평 이상', min: 30, max: null },
+    ],
+  },
+  {
+    key: 'floor',
+    label: '층수',
+    type: 'floor',
+    ranges: [
+      { label: '지하', test: (lv) => lv !== null && lv < 0 },
+      { label: '1층', test: (lv) => lv === 1 },
+      { label: '2층 이상', test: (lv) => lv !== null && lv >= 2 },
+    ],
+  },
+]
+
+// 매물 정렬 (값이 없는 매물은 뒤로)
+export const LISTING_SORTS = [
+  { value: '', label: '추천순' },
+  { value: 'latest', label: '최신순' },
+  { value: 'premiumAsc', label: '권리금 낮은순', key: 'premium' },
+  { value: 'rentAsc', label: '월세 낮은순', key: 'monthlyRent' },
+  { value: 'views', label: '조회 많은순' },
+]
+
 // 대표 지역(시/도). aliases: 지역 텍스트가 이 값으로 시작하면 해당 지역으로 판단
 export const REGIONS = [
   { value: '서울', aliases: ['서울'] },
@@ -52,6 +145,8 @@ export const BOARDS = {
     label: '매물 등록',
     desc: '양도할 점포 매물을 등록하는 공간입니다. 등록된 매물은 매물 검색에 노출됩니다.',
     fields: [
+      { key: 'dealStatus', label: '거래상태', type: 'select', options: DEAL_STATUSES, default: '거래가능', required: true, badge: true },
+      { key: 'urgent', label: '급매', type: 'checkbox', text: '급매로 등록', on: '급매', off: '-' },
       { key: 'storeName', label: '점포명', type: 'text', placeholder: '예: 강남 OO카페', required: true },
       { key: 'region', label: '지역', type: 'text', placeholder: '예: 서울 강남구 역삼동', required: true },
       { key: 'category', label: '업종', type: 'select', options: CATEGORIES },
@@ -65,7 +160,7 @@ export const BOARDS = {
       { key: 'parking', label: '주차가능대수', type: 'number', unit: '대' },
     ],
     images: { count: 3, required: true },
-    listColumns: ['region', 'category', 'premium'],
+    listColumns: ['dealStatus', 'region', 'category', 'premium'],
     ads: true,
     writeLabel: '매물 등록하기',
   },
@@ -123,7 +218,7 @@ export const BOARDS = {
     label: '집기 중고거래',
     desc: '폐업·정리 매장의 집기와 장비를 저렴하게 사고파는 공간입니다.',
     fields: [
-      { key: 'status', label: '판매상태', type: 'select', options: ['판매중', '예약중', '판매완료'], default: '판매중', required: true },
+      { key: 'status', label: '판매상태', type: 'select', options: ['판매중', '예약중', '판매완료'], default: '판매중', required: true, badge: true },
       { key: 'price', label: '가격', type: 'money', unit: '원' },
       { key: 'negotiable', label: '가격협의', type: 'checkbox', text: '가격협의 가능' },
       { key: 'condition', label: '상품상태', type: 'select', options: ['상', '중', '하'] },
@@ -181,6 +276,7 @@ export function applyFilters(posts, filters = [], values = {}) {
     }
     const range = f.ranges[Number(value)]
     if (!range) return list
+    if (f.type === 'floor') return list.filter((p) => range.test(floorLevel(p[f.key])))
     return list.filter((p) => {
       const n = p[f.key]
       if (n === null || n === undefined) return false
@@ -195,7 +291,7 @@ export function canWriteBoard(info, user) {
 }
 
 export function formatFieldValue(field, value) {
-  if (field.type === 'checkbox') return value ? '가능' : '불가'
+  if (field.type === 'checkbox') return value ? (field.on ?? '가능') : (field.off ?? '불가')
   if (value === null || value === undefined || value === '') return '-'
   if (field.type === 'money' || field.type === 'number') {
     return `${Number(value).toLocaleString()}${field.unit ?? ''}`

@@ -4,7 +4,8 @@ import { CATEGORIES, REGIONS } from '../utils/board'
 import { Button, inputClass } from './ui'
 
 // 대표 지역(시/도) 선택 / 점포명 / 업종으로 매물 검색 → /search?region=&name=&category=
-export default function SearchBar({ initial = {}, large = false }) {
+// baseParams: 검색 화면에서 상세 조건·정렬 쿼리를 유지할 때 전달
+export default function SearchBar({ initial = {}, large = false, baseParams }) {
   const navigate = useNavigate()
   const [region, setRegion] = useState(initial.region ?? '')
   const [name, setName] = useState(initial.name ?? '')
@@ -12,7 +13,8 @@ export default function SearchBar({ initial = {}, large = false }) {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    const params = new URLSearchParams()
+    const params = new URLSearchParams(baseParams)
+    ;['region', 'name', 'category', 'page'].forEach((k) => params.delete(k))
     if (region.trim()) params.set('region', region.trim())
     if (name.trim()) params.set('name', name.trim())
     if (category) params.set('category', category)

@@ -64,6 +64,9 @@ const STATUS_STYLES = {
   판매중: 'bg-emerald-50 text-emerald-700',
   예약중: 'bg-amber-50 text-amber-700',
   판매완료: 'bg-slate-100 text-slate-500',
+  거래가능: 'bg-emerald-50 text-emerald-700',
+  계약중: 'bg-amber-50 text-amber-700',
+  거래완료: 'bg-slate-100 text-slate-500',
 }
 
 export function StatusBadge({ status }) {

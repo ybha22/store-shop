@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import useAuthStore from '../stores/authStore'
-import { BOARDS, formatFieldValue } from '../utils/board'
+import { BOARDS, formatFieldValue, listingNo } from '../utils/board'
 import { formatDateTime } from '../utils/dateUtil'
 import { canEditPost, deletePost, increaseViews, isAdActive } from '../service/postService'
 import { Button, Card, LinkButton, StatusBadge } from '../comp/ui'
 import CommentSection from '../comp/CommentSection'
 import AdPanel from '../comp/AdPanel'
-import { AdBadge } from '../comp/ListingCard'
+import { AdBadge, UrgentBadge } from '../comp/ListingCard'
 
 export default function BoardDetailPage() {
   const { board, id } = useParams()
@@ -37,6 +37,8 @@ export default function BoardDetailPage() {
       <p className="mb-2 flex items-center gap-2 text-sm font-medium text-indigo-600">
         {info.label}
         {info.ads && isAdActive(post) && <AdBadge />}
+        {post.urgent && post.dealStatus !== '거래완료' && <UrgentBadge />}
+        {info.ads && <span className="ml-auto font-mono text-xs text-slate-400">매물번호 {listingNo(post)}</span>}
       </p>
       <Card>
         <div className="border-b border-slate-100 p-6">
@@ -58,8 +60,8 @@ export default function BoardDetailPage() {
               <div key={field.key}>
                 <dt className="text-xs text-slate-400">{field.label}</dt>
                 <dd className="mt-1 font-semibold text-slate-800">
-                  {field.key === 'status' && post.status ? (
-                    <StatusBadge status={post.status} />
+                  {field.badge ? (
+                    <StatusBadge status={post[field.key] ?? field.default} />
                   ) : (
                     formatFieldValue(field, post[field.key])
                   )}
